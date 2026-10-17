@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shakuyaku - Belajar Kanji LPK</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --hard-color: #ef4444;
+            --easy-color: #10b981;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- TAMPILAN OVERLAY LOGIN / SANDI --- */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(15, 23, 42, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px 25px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .login-box h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.6rem;
+        }
+
+        .login-box p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-align: center;
+            outline: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.8rem;
+        }
+
+        p.subtitle {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        /* Navigasi Tab Dashboard */
+        .dashboard-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 500px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background-color: #e2e8f0;
+            color: #475569;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 110px;
+            text-align: center;
+        }
+
+        .nav-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Panel Kontrol Dropdown Bab */
+        .chapter-selector-container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .chapter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        select.chapter-select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            color: var(--text-color);
+            outline: none;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        /* Container Tampilan */
+        .view-container {
+            width: 100%;
+            max-width: 500px;
+            display: none;
+            flex-grow: 1;
+        }
+
+        .view-container.active { display: block; }
+
+        /* Mode Buku */
+        .book-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .book-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .book-table th, .book-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .book-table th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-size: 0.8rem;
+        }
+
+        .book-table td.kanji-col {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+
+        /* Flashcard Layout */
+        .flashcard-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 450px;
+            height: 220px;
+            cursor: pointer;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+            border-radius: 16px;
+        }
+
+        .flashcard.flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #f1f5f9;
+        }
+
+        .kanji-display {
+            font-size: clamp(2rem, 8vw, 3.2rem);
+            font-weight: bold;
+            color: #0f172a;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        .reading-display {
+            font-size: 1.2rem;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .meaning-display {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 10px;
+        }
+
+        .hard-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #fee2e2;
+            color: #dc2626;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .anki-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 450px;
+            margin-top: 15px;
+        }
+
+        .anki-btn {
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .anki-btn:active { transform: scale(0.96); }
+        .btn-hard { background-color: var(--hard-color); }
+        .btn-easy { background-color: var(--easy-color); }
+
+        .counter-info {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .completed-msg {
+            text-align: center;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+        }
+
+        .btn-reset {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        /* Dashboard Tampilan Progres */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .progress-bar-bg {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar-fill {
+            background: var(--easy-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 20px;
+            padding-bottom: 5px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- OVERLAY LAYAR KUNCI / PASSWORD -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <h2>Shakuyaku</h2>
+            <p>Masukkan Kata Sandi untuk mengakses materi Kanji</p>
+            <input type="password" id="passwordInput" class="login-input" placeholder="Kata Sandi..." onkeyup="handleKeyPress(event)">
+            <button class="login-btn" onclick="checkPassword()">Masuk</button>
+        </div>
+    </div>
+
+    <header>
+        <h1>Shakuyaku</h1>
+        <p class="subtitle">Aplikasi Hafalan Kosakata Kanji LPK</p>
+    </header>
+
+    <!-- Navigasi Dashboard Utama -->
+    <div class="dashboard-nav">
+        <button class="nav-btn active" id="btnFlashcard" onclick="switchView('flashcard')">⚡ Flashcard</button>
+        <button class="nav-btn" id="btnBook" onclick="switchView('book')">📖 Daftar Kanji</button>
+        <button class="nav-btn" id="btnStats" onclick="switchView('stats')">📊 Progres</button>
+    </div>
+
+    <!-- TAMPILAN 1: FLASHCARD -->
+    <div class="view-container active" id="flashcardView">
+        <!-- Panel Selection Bab untuk Flashcard -->
+        <div class="chapter-selector-container">
+            <div class="chapter-label">🎯 Pilih Materi Flashcard:</div>
+            <select id="chapterSelect" class="chapter-select" onchange="changeChapter()">
+                <option value="1">Bab 1 (1 - 30)</option>
+                <option value="2">Bab 2 (31 - 60)</option>
+                <option value="3">Bab 3 (61 - 90)</option>
+                <option value="4">Bab 4 (91 - 120)</option>
+                <option value="5">Bab 5 (121 - 150)</option>
+                <option value="6">Bab 6 (151 - 176)</option>
+                <option value="review_accumulative">🔄 Review Akumulatif (Bab 1 s.d. Bab Terpilih)</option>
+                <option value="all">📚 Semua Bab (176 Kanji)</option>
+                <option value="hard_only">⚠️ Khusus Kanji Susah (Semua Bab)</option>
+            </select>
+        </div>
+
+        <div class="flashcard-wrapper">
+            <div id="flashcardContent" style="width: 100%;">
+                <div class="flashcard-container" onclick="flipCard()">
+                    <div class="flashcard" id="card">
+                        <div class="card-face card-front">
+                            <span class="hard-badge" id="hardBadge" style="display: none;">Susah</span>
+                            <div class="kanji-display" id="frontKanji">--</div>
+                            <div class="hint">Klik kartu untuk melihat jawaban</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <div class="reading-display" id="backReading">--</div>
+                            <div class="meaning-display" id="backMeaning">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="anki-controls" id="ankiControls" style="visibility: hidden;">
+                    <button class="anki-btn btn-hard" onclick="answerCard('hard')">Susah<br><small>(Simpan & Ulang)</small></button>
+                    <button class="anki-btn btn-easy" onclick="answerCard('easy')">Mudah<br><small>(Lulus/Kuasai)</small></button>
+                </div>
+
+                <div class="counter-info" id="cardCounter">Sisa Kartu: 0</div>
+            </div>
+
+            <div id="completionMessage" class="completed-msg" style="display: none;">
+                <h2>🎉 Sesi Selesai!</h2>
+                <p>Semua Kanji pada materi ini berhasil Anda kuasai!</p>
+                <button class="btn-reset" onclick="resetFlashcards()">Ulangi Sesi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAMPILAN 2: MODE BUKU (DAFTAR KANJI) -->
+    <div class="view-container" id="bookView">
+        <!-- Panel Selection Bab Khusus Mode Buku -->
+        <div class="chapter-selector-container">
+            <div class="chapter-label">📖 Filter Daftar Kanji Per Bab:</div>
+            <select id="bookChapterSelect" class="chapter-select" onchange="renderBookTable()">
+                <option value="all">📚 Semua Bab (176 Kanji)</option>
+                <option value="1">Bab 1 (1 - 30)</option>
+                <option value="2">Bab 2 (31 - 60)</option>
+                <option value="3">Bab 3 (61 - 90)</option>
+                <option value="4">Bab 4 (91 - 120)</option>
+                <option value="5">Bab 5 (121 - 150)</option>
+                <option value="6">Bab 6 (151 - 176)</option>
+                <option value="hard_only">⚠️ Khusus Kanji Susah</option>
+            </select>
+        </div>
+
+        <div class="book-container">
+            <table class="book-table">
+                <thead>
+                    <tr>
+                        <th>Kanji</th>
+                        <th>Bacaan</th>
+                        <th>Arti</th>
+                        <th>Bab</th>
+                    </tr>
+                </thead>
+                <tbody id="bookTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAMPILAN 3: PROGRES BELAJAR -->
+    <div class="view-container" id="statsView">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="statTotal">0</div>
+                <div class="stat-label">Total Kanji</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statMastered" style="color: var(--easy-color);">0</div>
+                <div class="stat-label">Dikuasai (Mudah)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statHard" style="color: var(--hard-color);">0</div>
+                <div class="stat-label">Kanji Susah</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statPercent">0%</div>
+                <div class="stat-label">Progres Total</div>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.85rem; font-weight: 600; color: #475569;">Progres Kelulusan Kanji:</div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Dibuat oleh <strong>DIMAS WINDU</strong>
+    </footer>
+
+    <script>
+        // KATA SANDI AKSES
+        const APP_PASSWORD = "shakuyaku";
+
+        function checkAuthStatus() {
+            const isAuthenticated = localStorage.getItem("shakuyaku_auth") === "true";
+            if (isAuthenticated) {
+                document.getElementById("loginOverlay").style.display = "none";
+            } else {
+                document.getElementById("loginOverlay").style.display = "flex";
+            }
+        }
+
+        function checkPassword() {
+            const inputPass = document.getElementById("passwordInput").value;
+            if (inputPass === APP_PASSWORD) {
+                localStorage.setItem("shakuyaku_auth", "true");
+                document.getElementById("loginOverlay").style.display = "none";
+            } else {
+                alert("Kata sandi salah! Silakan coba lagi.");
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                checkPassword();
+            }
+        }
+
+        // Database 176 Kanji LPK
+        const originalVocabData = [
+            // BAB 1
+            { id: "1_1", kanji: "学生", reading: "がくせい", meaning: "PELAJAR, MAHASISWA", bab: 1 },
+            { id: "1_2", kanji: "学校", reading: "がっこう", meaning: "SEKOLAH", bab: 1 },
+            { id: "1_3", kanji: "生活", reading: "せいかつ", meaning: "KEHIDUPAN", bab: 1 },
+            { id: "1_4", kanji: "去年", reading: "きょねん", meaning: "TAHUN LALU", bab: 1 },
+            { id: "1_5", kanji: "先週", reading: "せんしゅう", meaning: "MINGGU LALU", bab: 1 },
+            { id: "1_6", kanji: "仕事", reading: "しごと", meaning: "PEKERJAAN", bab: 1 },
+            { id: "1_7", kanji: "元気（な）", reading: "げんき（な）", meaning: "SEHAT, SEMANGAT", bab: 1 },
+            { id: "1_8", kanji: "忙しい", reading: "いそがしい", meaning: "SIBUK", bab: 1 },
+            { id: "1_9", kanji: "働く", reading: "はたらく", meaning: "BEKERJA", bab: 1 },
+            { id: "1_10", kanji: "作る", reading: "つくる", meaning: "MEMBUAT", bab: 1 },
+            { id: "1_11", kanji: "人", reading: "ひと", meaning: "ORANG", bab: 1 },
+            { id: "1_12", kanji: "犬", reading: "いぬ", meaning: "ANJING", bab: 1 },
+            { id: "1_13", kanji: "家族", reading: "かぞく", meaning: "KELUARGA", bab: 1 },
+            { id: "1_14", kanji: "夕方", reading: "ゆうがた", meaning: "SORE", bab: 1 },
+            { id: "1_15", kanji: "英語", reading: "えいご", meaning: "BAHASA INGGRIS", bab: 1 },
+            { id: "1_16", kanji: "音楽", reading: "おんがく", meaning: "MUSIK", bab: 1 },
+            { id: "1_17", kanji: "習う", reading: "ならう", meaning: "MENERIMA PELAJARAN", bab: 1 },
+            { id: "1_18", kanji: "話す", reading: "はなす", meaning: "BERBICARA", bab: 1 },
+            { id: "1_19", kanji: "出かける", reading: "でかける", meaning: "PERGI KELUAR", bab: 1 },
+            { id: "1_20", kanji: "季節", reading: "きせつ", meaning: "MUSIM", bab: 1 },
+            { id: "1_21", kanji: "春", reading: "はる", meaning: "MUSIM SEMI", bab: 1 },
+            { id: "1_22", kanji: "夏", reading: "なつ", meaning: "MUSIM PANAS", bab: 1 },
+            { id: "1_23", kanji: "秋", reading: "あき", meaning: "MUSIM GUGUR", bab: 1 },
+            { id: "1_24", kanji: "冬", reading: "ふゆ", meaning: "MUSIM DINGIN", bab: 1 },
+            { id: "1_25", kanji: "花", reading: "はな", meaning: "BUNGA", bab: 1 },
+            { id: "1_26", kanji: "同じ", reading: "おなじ", meaning: "SAMA", bab: 1 },
+            { id: "1_27", kanji: "暑い", reading: "あつい", meaning: "PANAS", bab: 1 },
+            { id: "1_28", kanji: "寒い", reading: "さむい", meaning: "DINGIN (CUACA)", bab: 1 },
+            { id: "1_29", kanji: "天気", reading: "てんき", meaning: "CUACA", bab: 1 },
+            { id: "1_30", kanji: "晴れ", reading: "はれ", meaning: "CERAH", bab: 1 },
+
+            // BAB 2
+            { id: "2_1", kanji: "雨", reading: "あめ", meaning: "HUJAN", bab: 2 },
+            { id: "2_2", kanji: "雪", reading: "ゆき", meaning: "SALJU", bab: 2 },
+            { id: "2_3", kanji: "風", reading: "かぜ", meaning: "ANGIN", bab: 2 },
+            { id: "2_4", kanji: "今", reading: "いま", meaning: "SEKARANG", bab: 2 },
+            { id: "2_5", kanji: "昨日", reading: "きのう、さくじつ", meaning: "KEMARIN", bab: 2 },
+            { id: "2_6", kanji: "明日", reading: "あした、あす", meaning: "BESOK", bab: 2 },
+            { id: "2_7", kanji: "毎日", reading: "まいにち", meaning: "SETIAP HARI", bab: 2 },
+            { id: "2_8", kanji: "強い", reading: "つよい", meaning: "KUAT", bab: 2 },
+            { id: "2_9", kanji: "町", reading: "まち", meaning: "KOTA (KECIL)", bab: 2 },
+            { id: "2_10", kanji: "店", reading: "みせ", meaning: "TOKO", bab: 2 },
+            { id: "2_11", kanji: "食堂", reading: "しょくどう", meaning: "RUANG MAKAN, KANTIN", bab: 2 },
+            { id: "2_12", kanji: "便利（な）", reading: "べんり（な）", meaning: "PRAKTIS", bab: 2 },
+            { id: "2_13", kanji: "不便（な）", reading: "ふべん（な）", meaning: "RIBET", bab: 2 },
+            { id: "2_14", kanji: "静か（な）", reading: "しずか（な）", meaning: "SUNYI, SEPI, TENANG", bab: 2 },
+            { id: "2_15", kanji: "有名（な）", reading: "ゆうめい（な）", meaning: "TERKENAL", bab: 2 },
+            { id: "2_16", kanji: "多い", reading: "おおい", meaning: "BANYAK", bab: 2 },
+            { id: "2_17", kanji: "少ない", reading: "すくない", meaning: "SEDIKIT", bab: 2 },
+            { id: "2_18", kanji: "遠い", reading: "とおい", meaning: "JAUH", bab: 2 },
+            { id: "2_19", kanji: "道", reading: "みち", meaning: "JALAN", bab: 2 },
+            { id: "2_20", kanji: "公園", reading: "こうえん", meaning: "TAMAN", bab: 2 },
+            { id: "2_21", kanji: "銀行", reading: "ぎんこう", meaning: "BANK", bab: 2 },
+            { id: "2_22", kanji: "お寺", reading: "おてら", meaning: "KUIL BUDHA", bab: 2 },
+            { id: "2_23", kanji: "神社", reading: "じんじゃ", meaning: "KUIL SHINTO", bab: 2 },
+            { id: "2_24", kanji: "右", reading: "みぎ", meaning: "KANAN", bab: 2 },
+            { id: "2_25", kanji: "左", reading: "ひだり", meaning: "KIRI", bab: 2 },
+            { id: "2_26", kanji: "近く", reading: "ちかく", meaning: "DEKAT", bab: 2 },
+            { id: "2_27", kanji: "車", reading: "くるま", meaning: "KENDARAAN, MOBIL", bab: 2 },
+            { id: "2_28", kanji: "送る", reading: "おくる", meaning: "MENGIRIM", bab: 2 },
+            { id: "2_29", kanji: "時間", reading: "じかん", meaning: "WAKTU", bab: 2 },
+            { id: "2_30", kanji: "場所", reading: "ばしょ", meaning: "TEMPAT", bab: 2 },
+
+            // BAB 3
+            { id: "3_1", kanji: "駅", reading: "えき", meaning: "STASIUN", bab: 3 },
+            { id: "3_2", kanji: "受付", reading: "うけつけ", meaning: "RESEPSIONIS", bab: 3 },
+            { id: "3_3", kanji: "門", reading: "もん", meaning: "PINTU GERBANG", bab: 3 },
+            { id: "3_4", kanji: "電車", reading: "でんしゃ", meaning: "KERETA LISTRIK", bab: 3 },
+            { id: "3_5", kanji: "待つ", reading: "まつ", meaning: "MENUNGGU", bab: 3 },
+            { id: "3_6", kanji: "止まる", reading: "とまる", meaning: "BERHENTI", bab: 3 },
+            { id: "3_7", kanji: "着く", reading: "つく", meaning: "TIBA, SAMPAI", bab: 3 },
+            { id: "3_8", kanji: "急ぐ", reading: "いそぐ", meaning: "TERBURU BURU", bab: 3 },
+            { id: "3_9", kanji: "お金", reading: "おかね", meaning: "UANG", bab: 3 },
+            { id: "3_10", kanji: "食事", reading: "しょくじ", meaning: "MAKAN", bab: 3 },
+            { id: "3_11", kanji: "博物館", reading: "はくぶつかん", meaning: "MUSEUM", bab: 3 },
+            { id: "3_12", kanji: "動物園", reading: "どうぶつえん", meaning: "KEBUN BINATANG", bab: 3 },
+            { id: "3_13", kanji: "試合", reading: "しあい", meaning: "PERTANDINGAN", bab: 3 },
+            { id: "3_14", kanji: "楽しい", reading: "たのしい", meaning: "MENYENANGKAN", bab: 3 },
+            { id: "3_15", kanji: "難しい", reading: "むずかしい", meaning: "SULIT", bab: 3 },
+            { id: "3_16", kanji: "登る", reading: "のぼる", meaning: "MENDAKI", bab: 3 },
+            { id: "3_17", kanji: "高校", reading: "こうこう", meaning: "SMA", bab: 3 },
+            { id: "3_18", kanji: "大学", reading: "だいがく", meaning: "UNIVERSITAS", bab: 3 },
+            { id: "3_19", kanji: "漢字", reading: "かんじ", meaning: "HURUF KANJI", bab: 3 },
+            { id: "3_20", kanji: "無料", reading: "むりょう", meaning: "GRATIS", bab: 3 },
+            { id: "3_21", kanji: "言う", reading: "いう", meaning: "BERKATA", bab: 3 },
+            { id: "3_22", kanji: "書く", reading: "かく", meaning: "MENULIS", bab: 3 },
+            { id: "3_23", kanji: "貸す", reading: "かす", meaning: "MEMINJAMKAN", bab: 3 },
+            { id: "3_24", kanji: "教える", reading: "おしえる", meaning: "MENGAJARIKAN, MEMBERI TAHU", bab: 3 },
+            { id: "3_25", kanji: "説明する", reading: "せつめいする", meaning: "MENERANGKAN, MENJELASKAN", bab: 3 },
+            { id: "3_26", kanji: "午前", reading: "ごぜん", meaning: "AM, SEBELUM JAM 12 SIANG", bab: 3 },
+            { id: "3_27", kanji: "午後", reading: "ごご", meaning: "PM, SETELAH JAM 12 SIANG", bab: 3 },
+            { id: "3_28", kanji: "教科書", reading: "きょうかしょ", meaning: "BUKU MODUL, BUKU PELAJARAN", bab: 3 },
+            { id: "3_29", kanji: "教室", reading: "きょうしつ", meaning: "RUANG KELAS", bab: 3 },
+            { id: "3_30", kanji: "先生", reading: "せんせい", meaning: "GURU", bab: 3 },
+
+            // BAB 4
+            { id: "4_1", kanji: "全部", reading: "ぜんぶ", meaning: "SEMUA", bab: 4 },
+            { id: "4_2", kanji: "参加する", reading: "さんかする", meaning: "MENGIKUTI, BERPARTISIPASI", bab: 4 },
+            { id: "4_3", kanji: "用意する", reading: "よういする", meaning: "MENYIAPKAN", bab: 4 },
+            { id: "4_4", kanji: "飲み物", reading: "のみもの", meaning: "MINUMAN", bab: 4 },
+            { id: "4_5", kanji: "お茶", reading: "おちゃ", meaning: "THE", bab: 4 },
+            { id: "4_6", kanji: "お酒", reading: "おさけ", meaning: "(JENIS) MINUMAN KERAS", bab: 4 },
+            { id: "4_7", kanji: "材料", reading: "ざいりょう", meaning: "BAHAN", bab: 4 },
+            { id: "4_8", kanji: "野菜", reading: "やさい", meaning: "SAYURAN", bab: 4 },
+            { id: "4_9", kanji: "牛肉", reading: "ぎゅうにく", meaning: "DAGING SAPI", bab: 4 },
+            { id: "4_10", kanji: "豚肉", reading: "ぶたにく", meaning: "DAGING BABI", bab: 4 },
+            { id: "4_11", kanji: "皿", reading: "さら", meaning: "PIRING", bab: 4 },
+            { id: "4_12", kanji: "売る", reading: "うる", meaning: "MENJUAL", bab: 4 },
+            { id: "4_13", kanji: "持っていく", reading: "もっていく", meaning: "MEMBAWA PERGI", bab: 4 },
+            { id: "4_14", kanji: "卵", reading: "たまご", meaning: "TELUR", bab: 4 },
+            { id: "4_15", kanji: "料理", reading: "りょうり", meaning: "MASAKAN", bab: 4 },
+            { id: "4_16", kanji: "お湯", reading: "おゆ", meaning: "AIR PANAS", bab: 4 },
+            { id: "4_17", kanji: "調理方法", reading: "ちょうりほうほう", meaning: "CARA MASAK", bab: 4 },
+            { id: "4_18", kanji: "少し", reading: "すこし", meaning: "SEDIKIT", bab: 4 },
+            { id: "4_19", kanji: "味", reading: "あじ", meaning: "RASA (LIDAH)", bab: 4 },
+            { id: "4_20", kanji: "甘い", reading: "あまい", meaning: "MANIS", bab: 4 },
+            { id: "4_21", kanji: "辛い", reading: "からい", meaning: "PEDAS", bab: 4 },
+            { id: "4_22", kanji: "苦手（な）", reading: "にがて（な）", meaning: "LEMAH, TIDAK SUKA", bab: 4 },
+            { id: "4_23", kanji: "コピー機", reading: "コピーき", meaning: "MESIN FOTO COPY", bab: 4 },
+            { id: "4_24", kanji: "数字", reading: "すうじ", meaning: "ANGKA, BILANGAN", bab: 4 },
+            { id: "4_25", kanji: "電気", reading: "でんき", meaning: "LISTRIK, LAMPU", bab: 4 },
+            { id: "4_26", kanji: "音楽", reading: "おんがく", meaning: "MUSIK", bab: 4 },
+            { id: "4_27", kanji: "机", reading: "つくえ", meaning: "MEJA", bab: 4 },
+            { id: "4_28", kanji: "都合", reading: "つごう", meaning: "KONDISI, KEADAAN", bab: 4 },
+            { id: "4_29", kanji: "悪い", reading: "わるい", meaning: "BURUK, JELEK", bab: 4 },
+            { id: "4_30", kanji: "動く", reading: "うごく", meaning: "BERGERAK", bab: 4 },
+
+            // BAB 5
+            { id: "5_1", kanji: "使う", reading: "つかう", meaning: "MENGGUNAKAN", bab: 5 },
+            { id: "5_2", kanji: "終わる", reading: "おわる", meaning: "SELESAI, BERAKHIR", bab: 5 },
+            { id: "5_3", kanji: "お願いします", reading: "おねがいします", meaning: "MOHON BANTUANNYA", bab: 5 },
+            { id: "5_4", kanji: "用事", reading: "ようじ", meaning: "URUSAN", bab: 5 },
+            { id: "5_5", kanji: "氏名", reading: "しめい", meaning: "NAMA LENGKAP", bab: 5 },
+            { id: "5_6", kanji: "理由", reading: "りゆう", meaning: "ALASAN", bab: 5 },
+            { id: "5_7", kanji: "連絡先", reading: "れんらくさき", meaning: "INFORMASI PRIBADI, KONTAK", bab: 5 },
+            { id: "5_8", kanji: "別に", reading: "べつに", meaning: "TIDAK MASALAH, TIDAK BEGITU", bab: 5 },
+            { id: "5_9", kanji: "早く", reading: "はやく", meaning: "DENGAN CEPAT", bab: 5 },
+            { id: "5_10", kanji: "吸う", reading: "すう", meaning: "MENGHISAP", bab: 5 },
+            { id: "5_11", kanji: "取る", reading: "とる", meaning: "MENGAMBIL", bab: 5 },
+            { id: "5_12", kanji: "帰る", reading: "かえる", meaning: "PULANG", bab: 5 },
+            { id: "5_13", kanji: "伝える", reading: "つたえる", meaning: "MENYAMPAIKAN", bab: 5 },
+            { id: "5_14", kanji: "熱", reading: "ねつ", meaning: "DEMAM", bab: 5 },
+            { id: "5_15", kanji: "薬", reading: "くすり", meaning: "OBAT", bab: 5 },
+            { id: "5_16", kanji: "病気", reading: "びょうき", meaning: "SAKIT, PENYAKIT", bab: 5 },
+            { id: "5_17", kanji: "医者", reading: "いしゃ", meaning: "DOKTER", bab: 5 },
+            { id: "5_18", kanji: "住所", reading: "じゅうしょ", meaning: "ALAMAT", bab: 5 },
+            { id: "5_19", kanji: "痛い", reading: "いたい", meaning: "SAKIT", bab: 5 },
+            { id: "5_20", kanji: "眠い", reading: "ねむい", meaning: "MENGANTUK", bab: 5 },
+            { id: "5_21", kanji: "寝る", reading: "ねる", meaning: "TIDUR", bab: 5 },
+            { id: "5_22", kanji: "記入する", reading: "きにゅうする", meaning: "MENGISI", bab: 5 },
+            { id: "5_23", kanji: "体", reading: "からだ", meaning: "TUBUH, BADAN", bab: 5 },
+            { id: "5_24", kanji: "顔", reading: "かお", meaning: "WAJAH, MUKA", bab: 5 },
+            { id: "5_25", kanji: "目", reading: "め", meaning: "MATA", bab: 5 },
+            { id: "5_26", kanji: "耳", reading: "みみ", meaning: "TELINGA", bab: 5 },
+            { id: "5_27", kanji: "口", reading: "くち", meaning: "MULUT", bab: 5 },
+            { id: "5_28", kanji: "頭", reading: "あたま", meaning: "KEPALA", bab: 5 },
+            { id: "5_29", kanji: "足", reading: "あし", meaning: "KAKI", bab: 5 },
+            { id: "5_30", kanji: "手", reading: "て", meaning: "TANGAN", bab: 5 },
+
+            // BAB 6
+            { id: "6_1", kanji: "起きる", reading: "おきる", meaning: "BANGUN TIDUR", bab: 6 },
+            { id: "6_2", kanji: "歩く", reading: "あるく", meaning: "BERJALAN KAKI", bab: 6 },
+            { id: "6_3", kanji: "走る", reading: "はしる", meaning: "BERLARI", bab: 6 },
+            { id: "6_4", kanji: "運動する", reading: "うんどうする", meaning: "BEROLAHRAGA", bab: 6 },
+            { id: "6_5", kanji: "お父さん", reading: "おとうさん", meaning: "AYAH (ORANG LAIN)", bab: 6 },
+            { id: "6_6", kanji: "お母さん", reading: "おかあさん", meaning: "IBU (ORANG LAIN)", bab: 6 },
+            { id: "6_7", kanji: "兄", reading: "あに", meaning: "KAKAK LAKI LAKI (SENDIRI)", bab: 6 },
+            { id: "6_8", kanji: "お兄さん", reading: "おにいさん", meaning: "KAKAK LAKI LAKI (ORANG LAIN)", bab: 6 },
+            { id: "6_9", kanji: "姉", reading: "あね", meaning: "KAKAK PEREMPUAN (SENDIRI)", bab: 6 },
+            { id: "6_10", kanji: "お姉さん", reading: "おねえさん", meaning: "KAKAK PEREMPUAN (ORANG LAIN)", bab: 6 },
+            { id: "6_11", kanji: "弟", reading: "おとうと", meaning: "ADIK LAKI LAKI (SENDIRI)", bab: 6 },
+            { id: "6_12", kanji: "妹", reading: "いもうと", meaning: "ADIK PEREMPUAN (SENDIRI)", bab: 6 },
+            { id: "6_13", kanji: "夫", reading: "おっと", meaning: "SUAMI (SENDIRI)", bab: 6 },
+            { id: "6_14", kanji: "妻", reading: "つま", meaning: "ISTRI (SENDIRI)", bab: 6 },
+            { id: "6_15", kanji: "両親", reading: "りょうしん", meaning: "KEDUA ORANG TUA", bab: 6 },
+            { id: "6_16", kanji: "男の子", reading: "おとこのこ", meaning: "ANAK LAKI LAKI", bab: 6 },
+            { id: "6_17", kanji: "女の子", reading: "おんなのこ", meaning: "ANAK PEREMPUAN", bab: 6 },
+            { id: "6_18", kanji: "お祝い", reading: "おいわい", meaning: "PERAYAAN", bab: 6 },
+            { id: "6_19", kanji: "誕生日", reading: "たんじょうび", meaning: "HARI ULANG TAHUN", bab: 6 },
+            { id: "6_20", kanji: "結婚", reading: "けっこん", meaning: "PERNIKAHAN", bab: 6 },
+            { id: "6_21", kanji: "時計", reading: "とけい", meaning: "JAM TANGAN", bab: 6 },
+            { id: "6_22", kanji: "幸せ（な）", reading: "しあわせ（な）", meaning: "BAHAGIA", bab: 6 },
+            { id: "6_23", kanji: "生まれる", reading: "うまれる", meaning: "LAHIR", bab: 6 },
+            { id: "6_24", kanji: "思う", reading: "おもう", meaning: "BERPIKIR, BERPENDAPAT, MERASA", bab: 6 },
+            { id: "6_25", kanji: "選ぶ", reading: "えらぶ", meaning: "MEMILIH", bab: 6 },
+            { id: "6_26", kanji: "合格する", reading: "ごうかくする", meaning: "LULUS", bab: 6 }
+        ];
+
+        // Key LocalStorage
+        const STORAGE_HARD_KEY = "shakuyaku_hard_kanji_v2";
+        const STORAGE_MASTERED_KEY = "shakuyaku_mastered_kanji_v2";
+        const STORAGE_LAST_CHAPTER_KEY = "shakuyaku_last_chapter_v2";
+
+        let hardKanjiIds = JSON.parse(localStorage.getItem(STORAGE_HARD_KEY)) || [];
+        let masteredKanjiIds = JSON.parse(localStorage.getItem(STORAGE_MASTERED_KEY)) || [];
+        let activeChapter = localStorage.getItem(STORAGE_LAST_CHAPTER_KEY) || "1";
+
+        let reviewQueue = [];
+        let currentCard = null;
+
+        // Inisialisasi Utama
+        function initApp() {
+            checkAuthStatus();
+            document.getElementById("chapterSelect").value = activeChapter;
+            renderBookTable();
+            updateStats();
+            resetFlashcards();
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_HARD_KEY, JSON.stringify(hardKanjiIds));
+            localStorage.setItem(STORAGE_MASTERED_KEY, JSON.stringify(masteredKanjiIds));
+            localStorage.setItem(STORAGE_LAST_CHAPTER_KEY, activeChapter);
+            updateStats();
+        }
+
+        // Ganti Bab Flashcard
+        function changeChapter() {
+            activeChapter = document.getElementById("chapterSelect").value;
+            saveData();
+            resetFlashcards();
+        }
+
+        // Filter Data Flashcard
+        function getFilteredData() {
+            if (activeChapter === 'all') {
+                return originalVocabData;
+            } else if (activeChapter === 'hard_only') {
+                return originalVocabData.filter(item => hardKanjiIds.includes(item.id));
+            } else if (activeChapter === 'review_accumulative') {
+                const currentBabNum = parseInt(localStorage.getItem(STORAGE_LAST_CHAPTER_KEY)) || 1;
+                return originalVocabData.filter(item => item.bab <= currentBabNum);
+            } else {
+                const babNum = parseInt(activeChapter);
+                return originalVocabData.filter(item => item.bab === babNum);
+            }
+        }
+
+        // Switch Tab Navigation
+        function switchView(viewName) {
+            document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            if (viewName === 'flashcard') {
+                document.getElementById('flashcardView').classList.add('active');
+                document.getElementById('btnFlashcard').classList.add('active');
+            } else if (viewName === 'book') {
+                document.getElementById('bookView').classList.add('active');
+                document.getElementById('btnBook').classList.add('active');
+                renderBookTable();
+            } else if (viewName === 'stats') {
+                document.getElementById('statsView').classList.add('active');
+                document.getElementById('btnStats').classList.add('active');
+            }
+        }
+
+        // Render Tabel Daftar Kanji (Mode Buku)
+        function renderBookTable() {
+            const tbody = document.getElementById("bookTableBody");
+            const selectedBookBab = document.getElementById("bookChapterSelect").value;
+            tbody.innerHTML = "";
+
+            let filteredBookData = originalVocabData;
+
+            if (selectedBookBab === 'hard_only') {
+                filteredBookData = originalVocabData.filter(item => hardKanjiIds.includes(item.id));
+            } else if (selectedBookBab !== 'all') {
+                const babNum = parseInt(selectedBookBab);
+                filteredBookData = originalVocabData.filter(item => item.bab === babNum);
+            }
+
+            filteredBookData.forEach(item => {
+                const row = document.createElement("tr");
+                const isHard = hardKanjiIds.includes(item.id);
+                row.innerHTML = `
+                    <td class="kanji-col">${item.kanji} ${isHard ? '⚠️' : ''}</td>
+                    <td>${item.reading}</td>
+                    <td>${item.meaning}</td>
+                    <td>Bab ${item.bab}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Shuffle Logic
+        function shuffle(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Reset Flashcard Queue
+        function resetFlashcards() {
+            const rawData = getFilteredData();
+            
+            let queuePool = [];
+            rawData.forEach(item => {
+                queuePool.push(item);
+                if (hardKanjiIds.includes(item.id)) {
+                    queuePool.push(item);
+                }
+            });
+
+            reviewQueue = shuffle(queuePool);
+            
+            document.getElementById("flashcardContent").style.display = "block";
+            document.getElementById("completionMessage").style.display = "none";
+            loadNextCard();
+        }
+
+        function loadNextCard() {
+            const cardElement = document.getElementById("card");
+            const ankiControls = document.getElementById("ankiControls");
+            
+            ankiControls.style.visibility = "hidden";
+            cardElement.classList.remove("flipped");
+
+            if (reviewQueue.length === 0) {
+                document.getElementById("flashcardContent").style.display = "none";
+                document.getElementById("completionMessage").style.display = "block";
+                return;
+            }
+
+            currentCard = reviewQueue[0];
+
+            setTimeout(() => {
+                document.getElementById("frontKanji").textContent = currentCard.kanji;
+                document.getElementById("backReading").textContent = currentCard.reading;
+                document.getElementById("backMeaning").textContent = currentCard.meaning;
+                document.getElementById("hardBadge").style.display = hardKanjiIds.includes(currentCard.id) ? "block" : "none";
+                document.getElementById("cardCounter").textContent = `Sisa Antrean Kartu: ${reviewQueue.length}`;
+            }, 150);
+        }
+
+        function flipCard() {
+            const cardElement = document.getElementById("card");
+            cardElement.classList.toggle("flipped");
+            document.getElementById("ankiControls").style.visibility = 
+                cardElement.classList.contains("flipped") ? "visible" : "hidden";
+        }
+
+        function answerCard(quality) {
+            const answeredCard = reviewQueue.shift();
+
+            if (quality === 'hard') {
+                if (!hardKanjiIds.includes(answeredCard.id)) {
+                    hardKanjiIds.push(answeredCard.id);
+                }
+                masteredKanjiIds = masteredKanjiIds.filter(id => id !== answeredCard.id);
+                reviewQueue.push(answeredCard);
+            } else if (quality === 'easy') {
+                if (!masteredKanjiIds.includes(answeredCard.id)) {
+                    masteredKanjiIds.push(answeredCard.id);
+                }
+                hardKanjiIds = hardKanjiIds.filter(id => id !== answeredCard.id);
+                reviewQueue = reviewQueue.filter(item => item.id !== answeredCard.id);
+            }
+
+            saveData();
+            loadNextCard();
+        }
+
+        function updateStats() {
+            const total = originalVocabData.length;
+            const mastered = masteredKanjiIds.length;
+            const hard = hardKanjiIds.length;
+            const percent = total > 0 ? Math.round((mastered / total) * 100) : 0;
+
+            document.getElementById("statTotal").textContent = total;
+            document.getElementById("statMastered").textContent = mastered;
+            document.getElementById("statHard").textContent = hard;
+            document.getElementById("statPercent").textContent = percent + "%";
+            document.getElementById("progressBar").style.width = percent + "%";
+        }
+
+        // Run Application
+        initApp();
+    </script>
+</body>
+</html>
