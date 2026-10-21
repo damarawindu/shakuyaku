@@ -433,6 +433,7 @@
         <button class="nav-btn active" id="btnFlashcard" onclick="switchView('flashcard')">⚡ Flashcard</button>
         <button class="nav-btn" id="btnBook" onclick="switchView('book')">📖 Daftar Kanji</button>
         <button class="nav-btn" id="btnStats" onclick="switchView('stats')">📊 Progres</button>
+        <button class="nav-btn" id="btnSakubun" onclick="switchView('sakubun')">✍️ AI Sakubun</button>
     </div>
 
     <!-- TAMPILAN 1: FLASHCARD -->
@@ -557,7 +558,39 @@
             </div>
         </div>
     </div>
+    <!-- TAMPILAN 4: AI SAKUBUN -->
+    <div class="view-container" id="sakubunView" style="display: none;">
+        <div class="section-card">
+            <h2>✍️ Pembuat Karangan AI (Tanpa Furigana)</h2>
+            <p>Pilih Bab Kanji yang sudah dihafal (Bunpou dikunci otomatis Minna no Nihongo Bab 1–25):</p>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; margin-top: 10px;">
+                <label><input type="checkbox" class="bab-check-ai" value="1" checked> Bab 1</label>
+                <label><input type="checkbox" class="bab-check-ai" value="2" checked> Bab 2</label>
+                <label><input type="checkbox" class="bab-check-ai" value="3" checked> Bab 3</label>
+                <label><input type="checkbox" class="bab-check-ai" value="4"> Bab 4</label>
+                <label><input type="checkbox" class="bab-check-ai" value="5"> Bab 5</label>
+                <label><input type="checkbox" class="bab-check-ai" value="6"> Bab 6</label>
+                <label><input type="checkbox" class="bab-check-ai" value="7"> Bab 7</label>
+                <label><input type="checkbox" class="bab-check-ai" value="8"> Bab 8</label>
+                <label><input type="checkbox" class="bab-check-ai" value="9"> Bab 9</label>
+                <label><input type="checkbox" class="bab-check-ai" value="10"> Bab 10</label>
+                <label><input type="checkbox" class="bab-check-ai" value="11"> Bab 11</label>
+                <label><input type="checkbox" class="bab-check-ai" value="12"> Bab 12</label>
+            </div>
 
+            <div style="margin-bottom: 15px;">
+                <label><b>Topik Karangan:</b></label>
+                <input type="text" id="aiTopic" placeholder="Contoh: Pekerjaan di pabrik, Kegiatan hari Minggu, Hobi..." style="width:100%; padding:10px; margin-top:5px; border-radius:5px; border:1px solid #ccc; box-sizing: border-box;">
+            </div>
+
+            <button onclick="generateSakubunDirectly()" class="action-btn" style="background:#007bff; color:white; padding:10px 15px; border:none; border-radius:5px; cursor:pointer;">🤖 Buat Karangan Otomatis</button>
+
+            <!-- Tempat Hasil -->
+            <div id="aiLoading" style="display:none; margin-top:15px; font-weight:bold; color:#007bff;">⏳ Sedang merangkai karangan panjang tanpa furigana...</div>
+            <div id="aiResultBox" style="display:none; margin-top:15px; background:#f9f9f9; padding:15px; border-left:4px solid #007bff; border-radius:5px; white-space: pre-wrap; line-height: 1.6; color:#333;"></div>
+        </div>
+    </div>
     <footer>
         Dibuat oleh <strong>DIMAS WINDU</strong>
     </footer>
@@ -1027,9 +1060,13 @@
                 document.getElementById('btnBook').classList.add('active');
                 renderBookTable();
             } else if (viewName === 'stats') {
-                document.getElementById('statsView').classList.add('active');
-                document.getElementById('btnStats').classList.add('active');
-            }
+        document.getElementById('statsView').classList.add('active');
+        document.getElementById('btnStats').classList.add('active');
+    } else if (viewName === 'sakubun') {
+        document.getElementById('sakubunView').classList.add('active');
+        document.getElementById('btnSakubun').classList.add('active');
+    }
+}
         }
 
         // Render Tabel Daftar Kanji (Mode Buku)
@@ -1153,7 +1190,53 @@
             document.getElementById("statPercent").textContent = percent + "%";
             document.getElementById("progressBar").style.width = percent + "%";
         }
+        async function generateSakubunDirectly() {
+    const checkedBoxes = document.querySelectorAll('.bab-check-ai:checked');
+    const selectedBabs = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
 
+    if (selectedBabs.length === 0) {
+        alert("Silakan pilih minimal 1 Bab Kanji!");
+        return;
+    }
+
+    const allowedKanjiList = originalVocabData
+        .filter(item => selectedBabs.includes(item.bab))
+        .map(item => item.kanji);
+
+    const topic = document.getElementById("aiTopic").value || "Kegiatan Sehari-hari";
+
+    document.getElementById("aiLoading").style.display = "block";
+    document.getElementById("aiResultBox").style.display = "none";
+
+    try {
+        // GANTI DENGAN URL VERCEL ANDA
+        const vercelApiUrl = "https://shakuyaku.vercel.app/api/generate-sakubun";
+
+        const response = await fetch(vercelApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                allowedKanji: allowedKanjiList,
+                topic: topic
+            })
+        });
+
+        const data = await response.json();
+        
+        document.getElementById("aiLoading").style.display = "none";
+
+        if (data.result) {
+            document.getElementById("aiResultBox").style.display = "block";
+            document.getElementById("aiResultBox").innerText = data.result;
+        } else {
+            alert(data.error || "Gagal membuat karangan.");
+        }
+
+    } catch (error) {
+        document.getElementById("aiLoading").style.display = "none";
+        alert("Terjadi kesalahan koneksi ke Vercel API.");
+    }
+}
         // Run Application
         initApp();
     </script>
